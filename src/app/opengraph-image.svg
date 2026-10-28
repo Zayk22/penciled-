@@ -1,0 +1,24 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#F5F2EB" />
+  
+  <!-- Thin rule at the top -->
+  <rect x="80" y="80" width="1040" height="1" fill="#E6E1D6" />
+  
+  <!-- Logo Mark -->
+  <g transform="translate(80, 120)">
+    <rect x="2" y="2" width="76" height="76" rx="18" stroke="#1E5B43" stroke-width="6" />
+    <g stroke="#1E5B43" stroke-width="7" stroke-linecap="round">
+      <path d="M22 42 L44 20" />
+      <path d="M22 60 L60 20" />
+      <path d="M38 60 L60 38" />
+    </g>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="190" y="185" font-family="Georgia, serif" font-size="72" font-weight="600" fill="#171512" letter-spacing="-0.03em">Penciled</text>
+
+  <!-- Editorial text block -->
+  <text x="80" y="360" font-family="ui-sans-serif, system-ui, sans-serif" font-size="32" fill="#736E65" letter-spacing="0.1em" font-weight="500">A BOOKING SCHEDULER</text>
+  
+  <text x="80" y="440" font-family="Georgia, serif" font-size="48" fill="#171512">Calm, precise scheduling.</text>
+</svg>

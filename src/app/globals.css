@@ -1,26 +1,81 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Colors */
+  --color-paper: #F5F2EB;
+  --color-ink: #171512;
+  --color-forest: #1E5B43;
+  --color-chartreuse: #D9F36A;
+  
+  /* Warm greys for borders/text (Contrast fixed) */
+  --color-border: #E6E1D6;
+  --color-border-strong: #B8B2A6; /* Fix #9: ~3.2:1 contrast vs paper */
+  --color-muted: #5E5B54; /* Fix #5: ~5.1:1 contrast vs paper */
+  --color-surface: #FFFFFF;
+  
+  /* Error state */
+  --color-error: #B3261E;
+
+  /* Fonts (wired to next/font variables in layout.tsx) */
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+  }
+  
+  /* Fix #6: 16px+ inputs prevent iOS zoom */
+  input, textarea, select {
+    @apply text-base;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* Real focus states */
+  :focus-visible {
+    @apply outline-none ring-2 ring-forest ring-offset-2 ring-offset-paper;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Fix #2: Skeleton Shimmer respecting prefers-reduced-motion */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background-color: #E6E1D6; /* Darker than paper, clearly visible */
+}
+
+.skeleton-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.4) 20%,
+    rgba(255, 255, 255, 0.6) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer::after {
+    animation: none;
+    display: none;
+  }
 }
