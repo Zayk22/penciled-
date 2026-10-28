@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793230514707,
+      "tag": "0000_gorgeous_overlord",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793230528430,
+      "tag": "0001_exclude_booking_overlaps",
+      "breakpoints": true
+    }
+  ]
+}
