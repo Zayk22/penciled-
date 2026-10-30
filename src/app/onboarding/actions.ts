@@ -1,3 +1,4 @@
+// src/app/onboarding/actions.ts
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
@@ -40,19 +41,17 @@ export async function createHostProfile(
       displayName: parsed.data.displayName,
       timezone: parsed.data.timezone,
     });
-  } catch (error: any) {
-    // Check for Postgres unique violation (23505)
-    const code = error.code || error.cause?.code;
+  } catch (error: unknown) {
+    const err = error as { code?: string; cause?: { code?: string } };
+    const code = err.code || err.cause?.code;
+    
     if (code === "23505") {
-      // We can't know exactly which field caused it without parsing the detail, 
-      // but 99% of the time it's the username.
       return {
         fieldErrors: {
           username: ["This username is already taken."],
         },
       };
     }
-    // Never return raw database errors to the client
     return { error: "An unexpected error occurred. Please try again." };
   }
 

@@ -2,13 +2,12 @@ import { z } from "zod";
 import { RESERVED_USERNAMES } from "./reserved-usernames";
 import { isValidTimezone } from "./time";
 
-// Shared validators
 const timezoneSchema = z.string().refine(isValidTimezone, {
   message: "Must be a valid IANA timezone string.",
 });
 
-const timeStringSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, {
-  message: "Time must be in HH:mm format.",
+const timeStringSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/, {
+  message: "Time must be in HH:MM format.",
 });
 
 export const onboardingSchema = z.object({
@@ -24,24 +23,31 @@ export const onboardingSchema = z.object({
 });
 
 export const availabilityRuleSchema = z.object({
-  weekday: z.number().int().min(0).max(6),
+  weekday: z.coerce.number().int().min(0).max(6),
   startTime: timeStringSchema,
   endTime: timeStringSchema,
-}).refine((data) => data.endTime > data.startTime, {
+}).refine((data) => data.endTime.substring(0, 5) > data.startTime.substring(0, 5), {
   message: "End time must be after start time.",
   path: ["endTime"],
 });
 
 export const dateOverrideSchema = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD"),
-  isBlocked: z.boolean(),
+  date: z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD")
+    .refine((val) => {
+      const [y, m, d] = val.split("-").map(Number);
+      const dateObj = new Date(Date.UTC(y, m - 1, d));
+      return dateObj.getUTCFullYear() === y && dateObj.getUTCMonth() === m - 1 && dateObj.getUTCDate() === d;
+    }, "Invalid calendar date"),
+  isBlocked: z.coerce.boolean(),
   startTime: timeStringSchema.optional().nullable(),
   endTime: timeStringSchema.optional().nullable(),
 }).refine((data) => {
-  if (data.isBlocked) return data.startTime == null && data.endTime == null;
-  return data.startTime != null && data.endTime != null && data.endTime > data.startTime;
+  if (data.isBlocked) return true;
+  if (!data.startTime || !data.endTime) return false;
+  return data.endTime.substring(0, 5) > data.startTime.substring(0, 5);
 }, {
-  message: "Invalid override time range.",
+  message: "End time must be after start time.",
   path: ["endTime"],
 });
 
@@ -61,7 +67,6 @@ export const eventTypeSchema = z.object({
 export const bookingRequestSchema = z.object({
   hostUsername: z.string(),
   eventSlug: z.string(),
-  // Note: startTime is an ISO string from the client, but we won't trust it yet
   requestedStartTime: z.string().datetime(),
   guestName: z.string().min(1, "Name is required.").max(100),
   guestEmail: z.string().email("Must be a valid email."),

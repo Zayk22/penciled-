@@ -1,3 +1,4 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Fraunces, Instrument_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -30,10 +31,12 @@ export default function RootLayout({
       appearance={{
         variables: {
           colorPrimary: "#1E5B43",
+          colorPrimaryForeground: "#F5F2EB",
           colorBackground: "#F5F2EB",
-          colorText: "#171512",
-          colorInputBackground: "#FFFFFF",
-          colorInputText: "#171512",
+          colorForeground: "#171512",
+          colorMutedForeground: "#5E5B54",
+          colorInput: "#FFFFFF",
+          colorInputForeground: "#171512",
           colorDanger: "#B3261E",
           fontFamily: "var(--font-instrument)",
           borderRadius: "8px",

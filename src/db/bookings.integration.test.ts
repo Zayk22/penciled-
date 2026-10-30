@@ -1,8 +1,8 @@
+// src/db/bookings.integration.test.ts
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { config } from "dotenv";
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
-// Load environment variables before importing the db
 config({ path: ".env.local" });
 
 import { db } from "./index";
@@ -18,7 +18,6 @@ describe("Database Concurrency (Integration)", () => {
   let testEventTypeId: string;
 
   beforeAll(async () => {
-    // Create a unique host for this test run
     const [host] = await db.insert(hosts).values({
       clerkUserId: `test_clerk_${Date.now()}`,
       username: `testuser_${Date.now()}`,
@@ -28,7 +27,6 @@ describe("Database Concurrency (Integration)", () => {
 
     testHostId = host.id;
 
-    // Create an event type for the host
     const [eventType] = await db.insert(eventTypes).values({
       hostId: testHostId,
       title: "Test Meeting",
@@ -45,7 +43,6 @@ describe("Database Concurrency (Integration)", () => {
   });
 
   afterAll(async () => {
-    // Clean up: Deleting the host cascades to event types and bookings
     if (testHostId) {
       await db.delete(hosts).where(eq(hosts.id, testHostId));
     }
@@ -54,8 +51,8 @@ describe("Database Concurrency (Integration)", () => {
   it("prevents overlapping bookings at the database level", async () => {
     const startTime = new Date("2026-07-01T14:00:00Z");
     const endTime = new Date("2026-07-01T14:30:00Z");
-    const blockedStart = new Date(startTime.getTime() - 0); // no buffer
-    const blockedEnd = new Date(endTime.getTime() + 0);
+    const blockedStart = new Date(startTime.getTime());
+    const blockedEnd = new Date(endTime.getTime());
 
     const baseBooking = {
       eventTypeId: testEventTypeId,
@@ -68,7 +65,6 @@ describe("Database Concurrency (Integration)", () => {
       bufferAfterMinutes: 0,
     };
 
-    // Attempt to insert two identical bookings concurrently
     const insert1 = db.insert(bookings).values({
       ...baseBooking,
       startTime,
@@ -85,7 +81,6 @@ describe("Database Concurrency (Integration)", () => {
       blockedEnd,
     });
 
-    // One should succeed, the other should throw a 23P01 error (exclusion_violation)
     const results = await Promise.allSettled([insert1, insert2]);
 
     const fulfilled = results.filter((r) => r.status === "fulfilled");
@@ -94,9 +89,8 @@ describe("Database Concurrency (Integration)", () => {
     expect(fulfilled).toHaveLength(1);
     expect(rejected).toHaveLength(1);
 
-    // Check the error shape. It might be directly on the error, or under .cause
     const error = (rejected[0] as PromiseRejectedResult).reason;
     const errorCode = error.code || error.cause?.code;
-    expect(errorCode).toBe("23P01"); // exclusion_violation
+    expect(errorCode).toBe("23P01");
   });
 });

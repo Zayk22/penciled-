@@ -1,6 +1,5 @@
-/**
- * Validates if a string is a supported IANA time zone.
- */
+// src/lib/time/index.ts
+
 export function isValidTimezone(tz: string): boolean {
   if (tz === "UTC") return true;
   try {
@@ -16,10 +15,19 @@ export function isValidTimezone(tz: string): boolean {
   }
 }
 
-/**
- * Robustly extracts the timezone offset for a given UTC date and IANA timezone.
- */
+export function getTodayInTimezone(timeZone: string, now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}
+
 export function getTimezoneOffsetMinutes(date: Date, timeZone: string): number {
+  // Truncate to whole seconds to avoid fractional offsets
+  const truncatedDate = new Date(Math.floor(date.getTime() / 1000) * 1000);
+  
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone,
     year: "numeric",
@@ -28,10 +36,10 @@ export function getTimezoneOffsetMinutes(date: Date, timeZone: string): number {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-    hour12: false,
+    hourCycle: "h23",
   });
 
-  const parts = formatter.formatToParts(date);
+  const parts = formatter.formatToParts(truncatedDate);
   const getPart = (type: string) => parts.find(p => p.type === type)?.value || "0";
 
   const year = parseInt(getPart("year"), 10);
@@ -41,51 +49,59 @@ export function getTimezoneOffsetMinutes(date: Date, timeZone: string): number {
   const minute = parseInt(getPart("minute"), 10);
   const second = parseInt(getPart("second"), 10);
 
-  // Construct a UTC date from the local time parts
   const localTimeAsUtc = Date.UTC(year, month - 1, day, hour, minute, second);
-  
-  // The difference between the local time (interpreted as UTC) and the actual UTC date is the offset
-  return (localTimeAsUtc - date.getTime()) / 60000;
+  return (localTimeAsUtc - truncatedDate.getTime()) / 60000;
 }
 
-/**
- * Converts a wall-clock time in a specific timezone to a UTC Date.
- */
+export function utcToWallClock(date: Date, timeZone: string): string {
+  return date.toLocaleTimeString("en-GB", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  });
+}
+
 export function wallClockToUtc(
   year: number, month: number, day: number, 
   hour: number, minute: number, 
   timeZone: string
 ): Date {
   const isoStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
-  
-  // 1. Create a baseline date as if the wall clock was UTC
   const baselineUtc = new Date(isoStr + "Z");
+
+  const offsetBefore = getTimezoneOffsetMinutes(new Date(baselineUtc.getTime() - 86400000), timeZone);
+  const offsetAfter = getTimezoneOffsetMinutes(new Date(baselineUtc.getTime() + 86400000), timeZone);
+
+  if (offsetBefore === offsetAfter) {
+    return new Date(baselineUtc.getTime() - offsetBefore * 60000);
+  }
+
+  const guess1 = new Date(baselineUtc.getTime() - offsetBefore * 60000);
+  const guess2 = new Date(baselineUtc.getTime() - offsetAfter * 60000);
+
+  const fmt1 = utcToWallClock(guess1, timeZone);
+  const fmt2 = utcToWallClock(guess2, timeZone);
+  const expected = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+
+  if (fmt1 === expected) return guess1;
+  if (fmt2 === expected) return guess2;
+
+  let start = Math.min(guess1.getTime(), guess2.getTime());
+  let end = Math.max(guess1.getTime(), guess2.getTime());
   
-  // 2. Find the offset at that baseline
-  const offset1 = getTimezoneOffsetMinutes(baselineUtc, timeZone);
-  
-  // 3. Adjust by the offset
-  let actualUtc = new Date(baselineUtc.getTime() - offset1 * 60000);
-  
-  // 4. Because of DST shifts, the offset might have changed at the new actualUtc. 
-  // We do a second pass to ensure accuracy.
-  const offset2 = getTimezoneOffsetMinutes(actualUtc, timeZone);
-  
-  if (offset1 !== offset2) {
-    actualUtc = new Date(baselineUtc.getTime() - offset2 * 60000);
+  // Ensure start and end are aligned to whole seconds
+  start = Math.floor(start / 1000) * 1000;
+  end = Math.ceil(end / 1000) * 1000;
+
+  while (end - start > 1000) {
+    const mid = Math.floor((start + end) / 2000) * 1000;
+    if (getTimezoneOffsetMinutes(new Date(mid), timeZone) === offsetBefore) {
+      start = mid;
+    } else {
+      end = mid;
+    }
   }
   
-  return actualUtc;
-}
-
-/**
- * Formats a UTC Date into a wall-clock time string (HH:mm) in the given timezone.
- */
-export function utcToWallClock(date: Date, timeZone: string): string {
-  return date.toLocaleTimeString("en-GB", {
-    timeZone,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  });
+  return new Date(end);
 }

@@ -1,7 +1,7 @@
+// scripts/test-integration.ts
 import { config } from "dotenv";
 import { execSync } from "child_process";
 
-// Load environment variables
 config({ path: ".env.local" });
 
 if (process.env.ALLOW_INTEGRATION_TESTS !== "true") {
@@ -13,6 +13,6 @@ console.log("Running integration tests against Neon dev branch...");
 
 try {
   execSync("npx vitest run src/db/bookings.integration.test.ts", { stdio: "inherit" });
-} catch (error) {
+} catch {
   process.exit(1);
 }

@@ -2,6 +2,8 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    // The integration test guards itself with the ALLOW_INTEGRATION_TESTS env var.
+    // Exclude integration tests from the default run (e.g., in CI)
+    // They are run explicitly via `npm run test:integration`
+    exclude: ["**/node_modules/**", "**/*.integration.test.ts"],
   },
 });
