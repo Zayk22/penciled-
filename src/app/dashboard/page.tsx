@@ -1,3 +1,4 @@
+// src/app/dashboard/page.tsx
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
@@ -20,7 +21,8 @@ export default async function DashboardPage() {
   const types = await db.select().from(eventTypes).where(eq(eventTypes.hostId, host.id));
 
   const hasAvailability = rules.length > 0;
-  const hasEventType = types.length > 0;
+  // Fix: Only count active event types
+  const hasActiveEventType = types.some(t => t.isActive);
   
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const publicUrl = `${baseUrl.replace(/\/$/, "")}/${host.username}`;
@@ -64,14 +66,14 @@ export default async function DashboardPage() {
               className="flex items-center justify-between p-4 rounded-md border border-border hover:border-forest hover:bg-forest/5 transition-colors group"
             >
               <div className="flex items-center gap-3">
-                <div className={`flex items-center justify-center w-6 h-6 rounded-full border ${hasEventType ? 'bg-forest border-forest text-paper' : 'border-muted text-transparent'}`}>
+                <div className={`flex items-center justify-center w-6 h-6 rounded-full border ${hasActiveEventType ? 'bg-forest border-forest text-paper' : 'border-muted text-transparent'}`}>
                   <IconCheck width={14} height={14} />
                 </div>
-                <span className={hasEventType ? "line-through text-muted" : "text-ink"}>
+                <span className={hasActiveEventType ? "line-through text-muted" : "text-ink"}>
                   Create an event type
                 </span>
               </div>
-              {!hasEventType && <IconArrowRight className="text-muted group-hover:text-forest transition-colors" width={20} height={20} />}
+              {!hasActiveEventType && <IconArrowRight className="text-muted group-hover:text-forest transition-colors" width={20} height={20} />}
             </Link>
 
             <div className="flex items-center justify-between p-4 rounded-md border border-border">

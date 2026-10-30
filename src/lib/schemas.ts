@@ -1,3 +1,4 @@
+// src/lib/schemas.ts
 import { z } from "zod";
 import { RESERVED_USERNAMES } from "./reserved-usernames";
 import { isValidTimezone } from "./time";
@@ -51,17 +52,30 @@ export const dateOverrideSchema = z.object({
   path: ["endTime"],
 });
 
+// Option lists for Event Types
+export const DURATIONS = [15, 30, 45, 60, 90, 120] as const;
+export const SLOT_INTERVALS = [15, 30, 60] as const;
+export const BUFFERS = [0, 5, 10, 15, 30, 45, 60] as const;
+export const MIN_NOTICES = [0, 60, 120, 240, 720, 1440, 2880] as const;
+export const MAX_DAYS = [7, 14, 30, 60, 90] as const;
+
 export const eventTypeSchema = z.object({
-  title: z.string().min(1).max(100),
-  slug: z.string().min(1).regex(/^[a-z0-9-]+$/, "Slug must be lowercase letters, numbers, and hyphens."),
-  description: z.string().max(500).optional().nullable(),
-  durationMinutes: z.number().int().positive(),
-  slotIntervalMinutes: z.number().int().positive(),
-  bufferBeforeMinutes: z.number().int().min(0),
-  bufferAfterMinutes: z.number().int().min(0),
-  minNoticeMinutes: z.number().int().min(0),
-  maxDaysAhead: z.number().int().min(1),
-  isActive: z.boolean().default(true),
+  title: z.string().min(1, "Title is required").max(100, "Title is too long"),
+  slug: z.string()
+    .min(1, "Slug is required")
+    .max(60, "Slug cannot exceed 60 characters")
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase letters, numbers, and hyphens only."),
+  description: z.preprocess(
+    (val) => (typeof val === "string" && val.trim() === "" ? null : val),
+    z.string().max(500, "Description cannot exceed 500 characters").nullable().optional()
+  ),
+  durationMinutes: z.coerce.number().refine((val) => (DURATIONS as readonly number[]).includes(val), "Invalid duration"),
+  slotIntervalMinutes: z.coerce.number().refine((val) => (SLOT_INTERVALS as readonly number[]).includes(val), "Invalid interval"),
+  bufferBeforeMinutes: z.coerce.number().refine((val) => (BUFFERS as readonly number[]).includes(val), "Invalid buffer"),
+  bufferAfterMinutes: z.coerce.number().refine((val) => (BUFFERS as readonly number[]).includes(val), "Invalid buffer"),
+  minNoticeMinutes: z.coerce.number().refine((val) => (MIN_NOTICES as readonly number[]).includes(val), "Invalid notice"),
+  maxDaysAhead: z.coerce.number().refine((val) => (MAX_DAYS as readonly number[]).includes(val), "Invalid max days"),
+  isActive: z.preprocess((val) => val === "on" || val === "true" || val === true, z.boolean()),
 });
 
 export const bookingRequestSchema = z.object({
