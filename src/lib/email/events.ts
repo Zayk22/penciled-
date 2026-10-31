@@ -1,6 +1,6 @@
 // src/lib/email/events.ts
-import { db } from "@/db";
-import { emailEvents } from "@/db/schema";
+import { db } from "../../db";
+import { emailEvents } from "../../db/schema";
 import { and, eq, sql } from "drizzle-orm";
 import { sendEmail, EmailRecipient } from "./index";
 

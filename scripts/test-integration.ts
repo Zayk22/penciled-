@@ -11,8 +11,11 @@ if (process.env.ALLOW_INTEGRATION_TESTS !== "true") {
 
 console.log("Running integration tests against Neon dev branch...");
 
+// Override the exclusion list in vitest.config.ts so it runs the integration tests
+process.env.VITEST_INTEGRATION = "true";
+
 try {
-  execSync("npx vitest run src/db/bookings.integration.test.ts", { stdio: "inherit" });
+  execSync("npx vitest run", { stdio: "inherit", env: process.env });
 } catch {
   process.exit(1);
 }
