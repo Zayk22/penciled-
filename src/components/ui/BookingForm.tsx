@@ -1,12 +1,13 @@
 // src/components/ui/BookingForm.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { TurnstileWidget } from "./TurnstileWidget";
 import { IconChevronLeft } from "@/components/icons";
 import { bookingRequestSchema } from "@/lib/schemas";
+import { createBooking } from "@/app/[username]/[eventSlug]/actions";
 
 type BookingFormProps = {
   hostUsername: string;
@@ -18,11 +19,14 @@ type BookingFormProps = {
   timeLabel: string;
   guestTz: string;
   onBack: () => void;
+  guestName: string;
+  setGuestName: (v: string) => void;
+  guestEmail: string;
+  setGuestEmail: (v: string) => void;
+  notes: string;
+  setNotes: (v: string) => void;
+  onSlotTaken: () => void;
 };
-
-async function submitBookingStub(): Promise<{ ok: boolean; error?: string }> {
-  return { ok: false, error: "Booking is not enabled yet." };
-}
 
 export function BookingForm({
   hostUsername,
@@ -34,15 +38,28 @@ export function BookingForm({
   timeLabel,
   guestTz,
   onBack,
+  guestName,
+  setGuestName,
+  guestEmail,
+  setGuestEmail,
+  notes,
+  setNotes,
+  onSlotTaken,
 }: BookingFormProps) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [notes, setNotes] = useState("");
   const [token, setToken] = useState<string | null>(null);
   const [turnstileError, setTurnstileError] = useState(false);
+  const [turnstileKey, setTurnstileKey] = useState(0); // Used to force reset
   const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  // Focus the error banner when it appears
+  useEffect(() => {
+    if (submitError) {
+      errorRef.current?.focus();
+    }
+  }, [submitError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,8 +69,8 @@ export function BookingForm({
       hostUsername,
       eventSlug,
       requestedStartTime: selectedSlotIso,
-      guestName: name,
-      guestEmail: email,
+      guestName,
+      guestEmail,
       guestTimezone: guestTz,
       notes: notes.trim() ? notes : null,
     });
@@ -74,11 +91,30 @@ export function BookingForm({
 
     setErrors({});
     setIsSubmitting(true);
-    const result = await submitBookingStub();
+    
+    const result = await createBooking({
+      hostUsername,
+      eventSlug,
+      requestedStartTime: selectedSlotIso,
+      guestName,
+      guestEmail,
+      guestTimezone: guestTz,
+      notes: notes.trim() ? notes : null,
+      turnstileToken: token,
+    });
+
     setIsSubmitting(false);
 
     if (!result.ok) {
-      setSubmitError(result.error || "Something went wrong.");
+      if (result.code === "slot_taken") {
+        onSlotTaken();
+        setToken(null);
+        setTurnstileKey(k => k + 1);
+      } else {
+        setSubmitError(result.error || "Something went wrong.");
+        setToken(null);
+        setTurnstileKey(k => k + 1);
+      }
     }
   };
 
@@ -106,7 +142,12 @@ export function BookingForm({
         </div>
 
         {submitError && (
-          <div role="alert" className="p-3 bg-error/10 text-error text-sm rounded-md mb-4">
+          <div 
+            ref={errorRef}
+            tabIndex={-1}
+            role="alert" 
+            className="p-3 bg-error/10 text-error text-sm rounded-md mb-4 outline-none"
+          >
             {submitError}
           </div>
         )}
@@ -115,8 +156,8 @@ export function BookingForm({
           <Input
             label="Name"
             name="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={guestName}
+            onChange={(e) => setGuestName(e.target.value)}
             autoComplete="name"
             required
             error={errors.name}
@@ -126,8 +167,8 @@ export function BookingForm({
             label="Email"
             name="email"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={guestEmail}
+            onChange={(e) => setGuestEmail(e.target.value)}
             autoComplete="email"
             required
             error={errors.email}
@@ -149,6 +190,7 @@ export function BookingForm({
 
           <div>
             <TurnstileWidget
+              key={turnstileKey}
               onSuccess={(t) => {
                 setToken(t);
                 setTurnstileError(false);

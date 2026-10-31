@@ -14,6 +14,7 @@ type ClientData = {
   eventType: { title: string; description: string | null; durationMinutes: number };
   host: { displayName: string; timezone: string; username: string };
   slots: { start: string; end: string }[];
+  eventSlug: string;
 };
 
 const noopSubscribe = () => () => {};
@@ -33,10 +34,17 @@ export function BookingClient({ data }: { data: ClientData }) {
   const [isChangingTz, setIsChangingTz] = useState(false);
   const [showFullDesc, setShowFullDesc] = useState(false);
 
+  // Lifted form state
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [notes, setNotes] = useState("");
+  const [stepError, setStepError] = useState<string | null>(null);
+
   // Scroll to top when switching to form step
   useEffect(() => {
     if (step === "form") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "instant" : "smooth" });
     }
   }, [step]);
 
@@ -48,6 +56,12 @@ export function BookingClient({ data }: { data: ClientData }) {
     () => (effectiveDay ? groupByPeriod(effectiveDay.slots, guestTz) : []),
     [effectiveDay, guestTz]
   );
+
+  const handleSlotTaken = () => {
+    setStep("select");
+    setSelectedSlot(null);
+    setStepError("That time was just taken. Please pick another.");
+  };
 
   if (groupedDays.length === 0) {
     return (
@@ -87,7 +101,6 @@ export function BookingClient({ data }: { data: ClientData }) {
       <main className="flex-1 w-full max-w-5xl mx-auto md:py-12">
         <div className="bg-surface md:border border-border md:rounded-md flex flex-col md:flex-row md:h-[calc(100dvh-10rem)] md:min-h-[500px] md:max-h-[720px] md:overflow-hidden">
           
-          {/* LEFT PANEL — hidden on mobile when step is 'form' */}
           <div className={`p-6 md:p-8 md:w-1/3 md:border-r border-border flex-col gap-4 md:overflow-y-auto ${step === "form" ? "hidden md:flex" : "flex"}`}>
             <div>
               <h1 className="font-serif text-2xl text-ink mb-1">{data.eventType.title}</h1>
@@ -96,11 +109,7 @@ export function BookingClient({ data }: { data: ClientData }) {
 
             {data.eventType.description && (
               <div>
-                <p
-                  className={`text-sm text-ink leading-relaxed ${
-                    showFullDesc ? "" : "line-clamp-3 md:line-clamp-none"
-                  }`}
-                >
+                <p className={`text-sm text-ink leading-relaxed ${showFullDesc ? "" : "line-clamp-3 md:line-clamp-none"}`}>
                   {data.eventType.description}
                 </p>
                 {showDescToggle && (
@@ -144,12 +153,11 @@ export function BookingClient({ data }: { data: ClientData }) {
             </div>
           </div>
 
-          {/* RIGHT PANEL — switches between time selection and form */}
           <div className="flex-1 flex flex-col min-w-0">
             {step === "form" && effectiveDay && effectiveSlotStart && selectedSlotLabel ? (
               <BookingForm
                 hostUsername={data.host.username}
-                eventSlug={data.slots.length > 0 ? data.eventType.title : ""} // placeholder; real slug passed below
+                eventSlug={data.eventSlug}
                 eventTitle={data.eventType.title}
                 durationMinutes={data.eventType.durationMinutes}
                 selectedSlotIso={effectiveSlotStart}
@@ -157,10 +165,22 @@ export function BookingClient({ data }: { data: ClientData }) {
                 timeLabel={selectedSlotLabel}
                 guestTz={guestTz}
                 onBack={() => setStep("select")}
+                guestName={guestName}
+                setGuestName={setGuestName}
+                guestEmail={guestEmail}
+                setGuestEmail={setGuestEmail}
+                notes={notes}
+                setNotes={setNotes}
+                onSlotTaken={handleSlotTaken}
               />
             ) : (
               <>
-                {/* Day strip */}
+                {stepError && (
+                  <div role="alert" className="p-3 bg-error/10 text-error text-sm m-4 md:m-6 rounded-md">
+                    {stepError}
+                  </div>
+                )}
+
                 <div className="shrink-0 border-b border-border p-4 md:p-6 overflow-x-auto snap-x">
                   <div className="flex gap-2 min-w-max">
                     {groupedDays.map((day, idx) => {
@@ -174,6 +194,7 @@ export function BookingClient({ data }: { data: ClientData }) {
                           onClick={() => {
                             setPreferredDate(day.date);
                             setSelectedSlot(null);
+                            setStepError(null);
                           }}
                           aria-pressed={isSelected}
                           aria-label={`${day.label}, ${day.slots.length} times available`}
@@ -228,7 +249,10 @@ export function BookingClient({ data }: { data: ClientData }) {
                           return (
                             <button
                               key={slot.start}
-                              onClick={() => setSelectedSlot(slot.start)}
+                              onClick={() => {
+                                setSelectedSlot(slot.start);
+                                setStepError(null);
+                              }}
                               aria-pressed={isSelected}
                               className={`flex items-center justify-center min-h-[44px] rounded-md border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 focus-visible:ring-offset-surface motion-reduce:transition-none ${
                                 isSelected
