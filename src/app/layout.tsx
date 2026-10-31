@@ -1,5 +1,5 @@
 // src/app/layout.tsx
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Instrument_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
@@ -19,6 +19,10 @@ const instrument = Instrument_Sans({
 export const metadata: Metadata = {
   title: "Penciled",
   description: "A booking scheduler.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#F5F2EB",
 };
 
 export default function RootLayout({

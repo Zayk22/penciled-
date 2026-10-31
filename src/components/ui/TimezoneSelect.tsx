@@ -6,11 +6,13 @@ import { useMemo, useLayoutEffect, useRef } from "react";
 export function TimezoneSelect({ 
   name = "timezone", 
   defaultValue, 
-  isOnboarding = false 
+  isOnboarding = false,
+  onChange,
 }: { 
   name?: string; 
   defaultValue?: string; 
-  isOnboarding?: boolean 
+  isOnboarding?: boolean;
+  onChange?: (tz: string) => void;
 }) {
   const selectRef = useRef<HTMLSelectElement>(null);
   
@@ -25,7 +27,6 @@ export function TimezoneSelect({
     return supported;
   }, []);
 
-  // Use useLayoutEffect to safely set the DOM node's value without setState
   useLayoutEffect(() => {
     if (isOnboarding && selectRef.current && typeof window !== "undefined") {
       const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -42,6 +43,7 @@ export function TimezoneSelect({
         ref={selectRef}
         id={name}
         name={name}
+        onChange={(e) => onChange?.(e.target.value)}
         className="flex min-h-[44px] w-full rounded-md border border-border bg-surface px-3 py-2 text-base text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
         required
         defaultValue={defaultValue || "UTC"}
