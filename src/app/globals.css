@@ -1,3 +1,4 @@
+/* src/app/globals.css */
 @import "tailwindcss";
 
 @theme {
@@ -9,14 +10,14 @@
   
   /* Warm greys for borders/text (Contrast fixed) */
   --color-border: #E6E1D6;
-  --color-border-strong: #B8B2A6; /* Fix #9: ~3.2:1 contrast vs paper */
-  --color-muted: #5E5B54; /* Fix #5: ~5.1:1 contrast vs paper */
+  --color-border-strong: #B8B2A6;
+  --color-muted: #5E5B54;
   --color-surface: #FFFFFF;
   
   /* Error state */
   --color-error: #B3261E;
 
-  /* Fonts (wired to next/font variables in layout.tsx) */
+  /* Fonts */
   --font-serif: var(--font-fraunces), Georgia, serif;
   --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
 
@@ -31,18 +32,26 @@
     @apply bg-paper text-ink font-sans antialiased;
   }
   
-  /* Fix #6: 16px+ inputs prevent iOS zoom */
   input, textarea, select {
     @apply text-base;
   }
 
-  /* Real focus states */
   :focus-visible {
     @apply outline-none ring-2 ring-forest ring-offset-2 ring-offset-paper;
   }
+
+  /* Fix browser autofill background */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--color-surface) inset !important;
+    -webkit-text-fill-color: var(--color-ink) !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
 }
 
-/* Fix #2: Skeleton Shimmer respecting prefers-reduced-motion */
+/* Skeleton shimmer */
 @keyframes shimmer {
   100% {
     transform: translateX(100%);
@@ -52,7 +61,7 @@
 .skeleton-shimmer {
   position: relative;
   overflow: hidden;
-  background-color: #E6E1D6; /* Darker than paper, clearly visible */
+  background-color: #E6E1D6;
 }
 
 .skeleton-shimmer::after {

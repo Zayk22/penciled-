@@ -1,99 +1,97 @@
+// src/app/page.tsx
+import Link from "next/link";
 import { Logo } from "@/components/Logo";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Skeleton, EmptyState, ErrorState } from "@/components/ui/States";
-import { IconArrowRight, IconChevronLeft, IconChevronRight, IconCheck, IconClose } from "@/components/icons";
+import { IconArrowRight } from "@/components/icons";
+import type { Metadata } from "next";
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: "Penciled · Scheduling that gets time zones right",
+  description: "Penciled is a booking page for people who meet across time zones. Share one link, set your weekly hours, and guests pick a time on their own clock.",
+};
+
+const features = [
+  {
+    title: "Your hours, their clock",
+    description: "You set availability in your time zone. Guests see it in theirs, including across daylight saving changes.",
+  },
+  {
+    title: "No double bookings",
+    description: "Two people can't take the same time, even if they book in the same second. The database refuses the second one.",
+  },
+  {
+    title: "No accounts for guests",
+    description: "Guests pick a time, leave a name and email, and they're done.",
+  },
+];
+
+export default function LandingPage() {
+  const demoUsername = process.env.NEXT_PUBLIC_DEMO_USERNAME;
+
   return (
-    <main className="min-h-screen p-6 md:p-12 lg:p-24 max-w-5xl mx-auto flex flex-col gap-16 overflow-x-hidden">
-      <header className="border-b border-border pb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="font-serif text-3xl md:text-4xl mb-2">Design System Test</h1>
-          <p className="text-muted">Phase 1: Complete verification.</p>
+    <div className="min-h-screen bg-paper flex flex-col">
+      <header className="w-full border-b border-border bg-surface">
+        <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center min-h-[44px]">
+            <Logo variant="full" size={24} />
+          </Link>
+          <Link 
+            href="/sign-in" 
+            className="text-sm font-medium text-muted hover:text-ink transition-colors min-h-[44px] flex items-center"
+          >
+            Sign in
+          </Link>
         </div>
-        <Logo variant="full" />
       </header>
 
-      <section className="flex flex-col gap-6">
-        <h2 className="font-sans font-medium text-sm tracking-widest uppercase text-forest border-b border-border pb-2">
-          01. Type Scale
-        </h2>
-        <div className="flex flex-col gap-4">
-          <p className="font-serif text-4xl md:text-5xl tracking-tight">Display 1 (Fraunces)</p>
-          <p className="font-serif text-2xl md:text-3xl">Heading 1</p>
-          <p className="font-sans text-lg font-medium">Subtitle (Instrument Sans)</p>
-          <p className="font-sans text-base text-ink">Body text. The quick brown fox jumps over the lazy dog.</p>
-          <p className="font-sans text-sm text-muted">Caption text. Used for timestamps and meta info.</p>
-        </div>
-      </section>
+      <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-12 md:py-24">
+        <h1 className="font-serif text-3xl md:text-5xl mb-6 tracking-tight text-ink">
+          Scheduling that gets time zones right.
+        </h1>
+        <p className="text-muted text-lg mb-12 leading-relaxed">
+          Penciled is a booking page for people who meet across time zones. Share one link, set your weekly hours, and guests pick a time on their own clock.
+        </p>
 
-      <section className="flex flex-col gap-6">
-        <h2 className="font-sans font-medium text-sm tracking-widest uppercase text-forest border-b border-border pb-2">
-          02. UI Components & States
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="flex flex-col gap-6">
-            <h3 className="font-sans font-medium border-b border-border pb-2">Buttons</h3>
-            <div className="flex flex-wrap items-center gap-4">
-              <Button variant="primary">Primary <IconArrowRight width={16} height={16} className="ml-2" /></Button>
-              <Button variant="secondary">Secondary</Button>
-            </div>
-            <div className="flex flex-wrap items-center gap-4">
-              <Button variant="primary" loading>Processing</Button>
-              <Button variant="primary" disabled>Disabled</Button>
-            </div>
+        <div className="h-px bg-border mb-8" />
 
-            <h3 className="font-sans font-medium border-b border-border pb-2 mt-4">Inputs</h3>
-            <Input label="Display Name" placeholder="e.g. Jane Doe" />
-            <Input label="Email Address" type="email" placeholder="jane@example.com" error="Please enter a valid email." />
-          </div>
-
-          <div className="flex flex-col gap-6">
-            <h3 className="font-sans font-medium border-b border-border pb-2">Page States</h3>
-            
-            <div className="flex flex-col gap-2">
-              <span className="text-xs text-muted">Skeleton</span>
-              <div className="flex flex-col gap-2">
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
+        <div className="flex flex-col">
+          {features.map((feature, index) => (
+            <div key={feature.title}>
+              <div className="py-8 flex flex-col gap-2">
+                <h2 className="font-serif text-xl text-ink">{feature.title}</h2>
+                <p className="text-muted">{feature.description}</p>
               </div>
+              {index < features.length - 1 && <div className="h-px bg-border" />}
             </div>
+          ))}
+        </div>
 
-            <div className="flex flex-col gap-2">
-              <span className="text-xs text-muted">Empty</span>
-              <EmptyState 
-                title="No bookings yet" 
-                description="When someone books a time with you, it will appear here."
-                action={<Button variant="secondary">Share link</Button>}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <span className="text-xs text-muted">Error</span>
-              <ErrorState 
-                description="We couldn't load your availability. Check your connection and try again."
-                action={<Button variant="primary" className="bg-error hover:bg-[#8a1d17]">Retry</Button>}
-              />
-            </div>
+        {demoUsername && (
+          <div className="mt-12">
+            <Link 
+              href={`/${demoUsername}`}
+              className="inline-flex items-center text-forest font-medium text-lg hover:underline underline-offset-4 min-h-[44px]"
+            >
+              See an example booking page
+              <IconArrowRight width={20} height={20} className="ml-2" />
+            </Link>
           </div>
-        </div>
-      </section>
+        )}
+      </main>
 
-      {/* Fix #8: Grid layout prevents orphan icons on mobile */}
-      <section className="flex flex-col gap-6">
-        <h2 className="font-sans font-medium text-sm tracking-widest uppercase text-forest border-b border-border pb-2">
-          03. Core Icons (5)
-        </h2>
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-4 md:gap-8 items-center bg-surface p-6 border border-border rounded-md">
-          <div className="flex flex-col items-center gap-2"><IconArrowRight /><span className="text-xs text-muted">Arrow</span></div>
-          <div className="flex flex-col items-center gap-2"><IconChevronLeft /><span className="text-xs text-muted">Chevron L</span></div>
-          <div className="flex flex-col items-center gap-2"><IconChevronRight /><span className="text-xs text-muted">Chevron R</span></div>
-          <div className="flex flex-col items-center gap-2"><IconCheck /><span className="text-xs text-muted">Check</span></div>
-          <div className="flex flex-col items-center gap-2"><IconClose /><span className="text-xs text-muted">Close</span></div>
+      <footer className="w-full border-t border-border bg-surface mt-auto">
+        <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <Link href="/" className="flex items-center gap-2 min-h-[44px] text-muted hover:text-ink transition-colors">
+            <Logo variant="mark" size={18} />
+            <span className="text-xs font-medium">Penciled</span>
+          </Link>
+          <Link 
+            href="/design" 
+            className="text-xs font-medium text-muted hover:text-ink transition-colors min-h-[44px] flex items-center"
+          >
+            Design system
+          </Link>
         </div>
-      </section>
-    </main>
+      </footer>
+    </div>
   );
 }
