@@ -13,10 +13,7 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  robots: {
-    index: false,
-    follow: false,
-  },
+  robots: { index: false, follow: false },
 };
 
 export default async function ConfirmationPage({
@@ -130,12 +127,44 @@ export default async function ConfirmationPage({
 
           <div className="h-px bg-border my-8" />
 
-          <div className="flex flex-col items-center gap-4">
-            <p className="text-xs text-muted text-center">
+          <div className="flex flex-col items-center gap-4 w-full">
+            <p className="text-xs text-muted text-center mb-2">
               Keep this page&apos;s link to come back to your booking.
             </p>
-            <Link href={`/${hostUsername}`}>
-              <Button variant="secondary">Back to profile</Button>
+
+            {!booking.isCancelled && (
+              <div className="w-full flex flex-col gap-2 mt-2">
+                {/* Add to Calendar - primary bordered action */}
+                <Link href={`/booking/${token}/calendar.ics`} className="w-full">
+                  <Button variant="secondary" className="w-full">Add to calendar</Button>
+                </Link>
+
+                {/* Reschedule */}
+                <Link
+                  href={`/booking/${token}/reschedule`}
+                  className="flex items-center justify-center w-full min-h-[44px] text-sm font-medium text-forest hover:bg-forest/5 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                >
+                  Reschedule booking
+                </Link>
+
+                {/* Cancel - destructive, separated by rule */}
+                <div className="border-t border-border mt-2 pt-4 w-full">
+                  <Link
+                    href={`/booking/${token}/cancel`}
+                    className="flex items-center justify-center w-full min-h-[44px] text-sm font-medium text-error hover:bg-error/5 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                  >
+                    Cancel booking
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* Back to profile - plain muted link at the bottom */}
+            <Link
+              href={`/${hostUsername}`}
+              className="flex items-center justify-center w-full min-h-[44px] text-sm text-muted hover:text-ink rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 focus-visible:ring-offset-surface mt-2"
+            >
+              Back to profile
             </Link>
           </div>
         </div>
