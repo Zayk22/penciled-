@@ -34,28 +34,38 @@ export function TurnstileWidget({
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const renderedRef = useRef(false);
-  const [scriptLoaded, setScriptLoaded] = useState(false);
-  const [scriptError, setScriptError] = useState(false);
 
-  // Keep callbacks in refs so the render effect never re-runs on parent re-render
+  // Capture the site key once at mount. No setState in effect for this check.
+  const [siteKey] = useState(() => process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
+
+  // Initialize from window if script was already loaded by a previous mount.
+  // The lazy initializer runs on the client only for the useState value, and
+  // is serialized to the server-rendered HTML so there is no hydration mismatch.
+  const [scriptLoaded, setScriptLoaded] = useState(
+    () => typeof window !== "undefined" && !!window.turnstile
+  );
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  // Sync callbacks into refs via effect (not during render).
   const onSuccessRef = useRef(onSuccess);
   const onErrorRef = useRef(onError);
   const onExpireRef = useRef(onExpire);
-  onSuccessRef.current = onSuccess;
-  onErrorRef.current = onError;
-  onExpireRef.current = onExpire;
-
-  // If the script was already loaded by a previous mount, mark ready
   useEffect(() => {
-    if (window.turnstile) setScriptLoaded(true);
-  }, []);
+    onSuccessRef.current = onSuccess;
+    onErrorRef.current = onError;
+    onExpireRef.current = onExpire;
+  }, [onSuccess, onError, onExpire]);
 
+  // Render the widget once the script is loaded. The callbacks read the latest
+  // prop via the refs above, so the effect only depends on scriptLoaded + siteKey.
   useEffect(() => {
-    if (!scriptLoaded || renderedRef.current || !containerRef.current || !window.turnstile) return;
-
-    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-    if (!siteKey) {
-      setScriptError(true);
+    if (
+      !scriptLoaded ||
+      renderedRef.current ||
+      !containerRef.current ||
+      !window.turnstile ||
+      !siteKey
+    ) {
       return;
     }
 
@@ -67,8 +77,9 @@ export function TurnstileWidget({
       "expired-callback": () => onExpireRef.current(),
       "error-callback": () => onErrorRef.current(),
     });
-  }, [scriptLoaded]);
+  }, [scriptLoaded, siteKey]);
 
+  // Cleanup on unmount.
   useEffect(() => {
     return () => {
       if (widgetIdRef.current && window.turnstile) {
@@ -78,6 +89,8 @@ export function TurnstileWidget({
       renderedRef.current = false;
     };
   }, []);
+
+  const scriptError = !siteKey || loadFailed;
 
   if (scriptError) {
     return (
@@ -93,7 +106,7 @@ export function TurnstileWidget({
         src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
         strategy="afterInteractive"
         onLoad={() => setScriptLoaded(true)}
-        onError={() => setScriptError(true)}
+        onError={() => setLoadFailed(true)}
       />
       <div ref={containerRef} className="min-h-[65px]" />
     </>

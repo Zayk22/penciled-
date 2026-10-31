@@ -20,7 +20,6 @@ type BookingFormProps = {
   onBack: () => void;
 };
 
-// Stub — replaced in 4D with the real server action. No DB call.
 async function submitBookingStub(): Promise<{ ok: boolean; error?: string }> {
   return { ok: false, error: "Booking is not enabled yet." };
 }
@@ -92,7 +91,7 @@ export function BookingForm({
           className="flex items-center min-h-[44px] text-sm text-muted hover:text-ink transition-colors mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 focus-visible:ring-offset-surface rounded"
         >
           <IconChevronLeft width={16} height={16} className="mr-1" />
-          Back
+          Back to times
         </button>
 
         <div className="bg-paper border border-border rounded-md p-4 mb-6">
@@ -143,7 +142,8 @@ export function BookingForm({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               maxLength={500}
-              className="flex min-h-[100px] w-full rounded-md border border-border bg-surface px-3 py-2 text-base text-ink placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
+              rows={3}
+              className="flex w-full rounded-md border border-border bg-surface px-3 py-2 text-base text-ink placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
             />
           </div>
 

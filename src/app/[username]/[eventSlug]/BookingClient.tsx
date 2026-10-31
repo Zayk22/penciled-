@@ -1,7 +1,7 @@
 // src/app/[username]/[eventSlug]/BookingClient.tsx
 "use client";
 
-import { useState, useSyncExternalStore, useMemo } from "react";
+import { useState, useSyncExternalStore, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/Button";
@@ -32,6 +32,13 @@ export function BookingClient({ data }: { data: ClientData }) {
   const [step, setStep] = useState<"select" | "form">("select");
   const [isChangingTz, setIsChangingTz] = useState(false);
   const [showFullDesc, setShowFullDesc] = useState(false);
+
+  // Scroll to top when switching to form step
+  useEffect(() => {
+    if (step === "form") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [step]);
 
   const effectiveDay = groupedDays.find(d => d.date === preferredDate) ?? groupedDays[0] ?? null;
   const effectiveSlotStart =
@@ -79,8 +86,9 @@ export function BookingClient({ data }: { data: ClientData }) {
 
       <main className="flex-1 w-full max-w-5xl mx-auto md:py-12">
         <div className="bg-surface md:border border-border md:rounded-md flex flex-col md:flex-row md:h-[calc(100dvh-10rem)] md:min-h-[500px] md:max-h-[720px] md:overflow-hidden">
-          {/* LEFT PANEL — stays in both steps */}
-          <div className="p-6 md:p-8 md:w-1/3 md:border-r border-border flex flex-col gap-4 md:overflow-y-auto">
+          
+          {/* LEFT PANEL — hidden on mobile when step is 'form' */}
+          <div className={`p-6 md:p-8 md:w-1/3 md:border-r border-border flex-col gap-4 md:overflow-y-auto ${step === "form" ? "hidden md:flex" : "flex"}`}>
             <div>
               <h1 className="font-serif text-2xl text-ink mb-1">{data.eventType.title}</h1>
               <p className="text-muted text-sm">{data.eventType.durationMinutes} minutes</p>
