@@ -1,6 +1,6 @@
 // src/lib/tokens/index.test.ts
 import { describe, it, expect } from "vitest";
-import { generateToken, hashToken, isValidTokenFormat } from "./index";
+import { generateToken, hashToken, isValidTokenFormat, generateDerivedToken } from "./index";
 
 describe("hashToken", () => {
   it("matches the known SHA-256 vector for 'abc'", () => {
@@ -72,5 +72,47 @@ describe("isValidTokenFormat", () => {
     expect(isValidTokenFormat([])).toBe(false);
     expect(isValidTokenFormat({})).toBe(false);
     expect(isValidTokenFormat(true)).toBe(false);
+  });
+});
+
+describe("generateDerivedToken", () => {
+  const secret = "a".repeat(32);
+  const bookingId = "123e4567-e89b-12d3-a456-426614174000";
+
+  it("returns a deterministic 64-char token and its matching hash", () => {
+    const { token, hash } = generateDerivedToken(bookingId, secret);
+    expect(token).toMatch(/^[0-9a-f]{64}$/);
+    expect(hash).toBe(hashToken(token));
+  });
+
+  it("produces the same token for the same booking ID and secret", () => {
+    const a = generateDerivedToken(bookingId, secret).token;
+    const b = generateDerivedToken(bookingId, secret).token;
+    expect(a).toBe(b);
+  });
+
+  it("produces a different token for a different booking ID", () => {
+    const a = generateDerivedToken(bookingId, secret).token;
+    const b = generateDerivedToken("987e6543-e21b-12d3-a456-426614174000", secret).token;
+    expect(a).not.toBe(b);
+  });
+
+  it("produces a different token for a different secret", () => {
+    const a = generateDerivedToken(bookingId, secret).token;
+    const b = generateDerivedToken(bookingId, "b".repeat(32)).token;
+    expect(a).not.toBe(b);
+  });
+
+  it("throws if the secret is missing", () => {
+    const originalEnv = process.env.BOOKING_TOKEN_SECRET;
+    delete process.env.BOOKING_TOKEN_SECRET;
+    
+    expect(() => generateDerivedToken(bookingId)).toThrow(/missing or too short/);
+    
+    if (originalEnv) process.env.BOOKING_TOKEN_SECRET = originalEnv;
+  });
+
+  it("throws if the secret is too short", () => {
+    expect(() => generateDerivedToken(bookingId, "short")).toThrow(/missing or too short/);
   });
 });

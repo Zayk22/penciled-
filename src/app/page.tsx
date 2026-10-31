@@ -29,7 +29,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-paper flex flex-col">
-      <header className="w-full border-b border-border bg-surface">
+      <header className="w-full border-b border-border bg-paper">
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center min-h-[44px]">
             <Logo variant="full" size={24} />
@@ -44,7 +44,7 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-12 md:py-24">
-        <h1 className="font-serif text-3xl md:text-5xl mb-6 tracking-tight text-ink">
+        <h1 className="font-serif text-3xl md:text-5xl mb-6 tracking-tight text-ink text-balance">
           Scheduling that gets time zones right.
         </h1>
         <p className="text-muted text-lg mb-12 leading-relaxed">
@@ -78,7 +78,7 @@ export default function LandingPage() {
         )}
       </main>
 
-      <footer className="w-full border-t border-border bg-surface mt-auto">
+      <footer className="w-full border-t border-border bg-paper mt-auto">
         <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2 min-h-[44px] text-muted hover:text-ink transition-colors">
             <Logo variant="mark" size={18} />

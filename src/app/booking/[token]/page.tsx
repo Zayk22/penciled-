@@ -132,7 +132,7 @@ export default async function ConfirmationPage({
 
           <div className="flex flex-col items-center gap-4">
             <p className="text-xs text-muted text-center">
-              Keep this page's link to come back to your booking.
+              Keep this page&apos;s link to come back to your booking.
             </p>
             <Link href={`/${hostUsername}`}>
               <Button variant="secondary">Back to profile</Button>

@@ -1,3 +1,4 @@
+// src/db/schema.ts
 import { pgTable, uuid, text, timestamp, boolean, integer, smallint, time, date, uniqueIndex, index, check, foreignKey, unique } from "drizzle-orm/pg-core";
 import { sql, relations } from "drizzle-orm";
 
@@ -59,7 +60,6 @@ export const eventTypes = pgTable("event_types", {
 }, (table) => [
   uniqueIndex("event_types_host_slug_idx").on(table.hostId, table.slug),
   index("event_types_host_idx").on(table.hostId),
-  // Fix: Composite unique constraint for the FK
   unique("event_types_id_host_unique").on(table.id, table.hostId),
   check("duration_positive", sql`${table.durationMinutes} > 0`),
   check("interval_positive", sql`${table.slotIntervalMinutes} > 0`),
@@ -92,6 +92,7 @@ export const bookings = pgTable("bookings", {
   cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
   manageTokenHash: text("manage_token_hash").unique(),
   reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
+  sequence: integer("sequence").default(0).notNull(),
   
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -119,8 +120,31 @@ export const bookings = pgTable("bookings", {
     ${table.blockedStart} = ${table.startTime} - make_interval(mins => ${table.bufferBeforeMinutes}) AND
     ${table.blockedEnd} = ${table.endTime} + make_interval(mins => ${table.bufferAfterMinutes})
   `),
+  check("sequence_non_negative", sql`${table.sequence} >= 0`),
 ]);
 
+// --- EMAIL EVENTS ---
+export const emailEvents = pgTable("email_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  bookingId: uuid("booking_id").notNull().references(() => bookings.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull(),
+  recipientRole: text("recipient_role").notNull(),
+  bookingSequence: integer("booking_sequence").notNull(),
+  status: text("status").default("pending").notNull(),
+  errorCode: text("error_code"),
+  providerMessageId: text("provider_message_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+}, (table) => [
+  unique("email_events_unique").on(table.bookingId, table.kind, table.recipientRole, table.bookingSequence),
+  index("email_events_status_idx").on(table.status),
+  check("email_events_kind_check", sql`${table.kind} IN ('confirmed', 'rescheduled', 'cancelled')`),
+  check("email_events_role_check", sql`${table.recipientRole} IN ('guest', 'host')`),
+  check("email_events_status_check", sql`${table.status} IN ('pending', 'sent', 'failed')`),
+  check("email_events_error_check", sql`${table.errorCode} IS NULL OR length(${table.errorCode}) <= 64`),
+]);
+
+// --- RELATIONS ---
 export const hostsRelations = relations(hosts, ({ many }) => ({
   eventTypes: many(eventTypes),
   availabilityRules: many(availabilityRules),
@@ -136,7 +160,7 @@ export const eventTypesRelations = relations(eventTypes, ({ one, many }) => ({
   bookings: many(bookings),
 }));
 
-export const bookingsRelations = relations(bookings, ({ one }) => ({
+export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   host: one(hosts, {
     fields: [bookings.hostId],
     references: [hosts.id],
@@ -144,5 +168,13 @@ export const bookingsRelations = relations(bookings, ({ one }) => ({
   eventType: one(eventTypes, {
     fields: [bookings.eventTypeId, bookings.hostId],
     references: [eventTypes.id, eventTypes.hostId],
+  }),
+  emailEvents: many(emailEvents),
+}));
+
+export const emailEventsRelations = relations(emailEvents, ({ one }) => ({
+  booking: one(bookings, {
+    fields: [emailEvents.bookingId],
+    references: [bookings.id],
   }),
 }));

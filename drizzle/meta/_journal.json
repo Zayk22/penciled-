@@ -15,6 +15,13 @@
       "when": 1793230528430,
       "tag": "0001_exclude_booking_overlaps",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793467744641,
+      "tag": "0002_phase_5_schema",
+      "breakpoints": true
     }
   ]
 }
