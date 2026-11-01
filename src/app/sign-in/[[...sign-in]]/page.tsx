@@ -1,4 +1,3 @@
-// src/app/sign-in/[[...sign-in]]/page.tsx
 import { SignIn } from "@clerk/nextjs";
 import { Suspense } from "react";
 import Link from "next/link";
@@ -11,7 +10,7 @@ export default function Page() {
       </Suspense>
       
       <div className="mt-6 text-center text-sm text-muted">
-        Don't have an account?{" "}
+        Don&apos;t have an account?{" "}
         <Link href="/sign-up" className="text-forest hover:underline font-medium">
           Sign up
         </Link>

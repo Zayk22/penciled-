@@ -1,8 +1,6 @@
-// src/components/ui/BookingCard.tsx
 import { bookings } from "@/db/schema";
 import { IconClose } from "@/components/icons";
 import { cancelHostBooking } from "@/app/dashboard/bookings/actions";
-import { Button } from "@/components/ui/Button";
 
 type Booking = typeof bookings.$inferSelect;
 

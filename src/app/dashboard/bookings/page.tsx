@@ -1,9 +1,8 @@
-// src/app/dashboard/bookings/page.tsx
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { hosts, bookings } from "@/db/schema";
-import { eq, desc, asc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { EmptyState } from "@/components/ui/States";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
