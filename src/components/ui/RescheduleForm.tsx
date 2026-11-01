@@ -2,7 +2,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { rescheduleBooking, RescheduleState } from "@/app/booking/[token]/reschedule/actions";
+import { rescheduleBooking } from "@/app/booking/[token]/reschedule/actions";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 

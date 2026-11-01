@@ -40,6 +40,7 @@ export type GuestConfirmationContext = {
   eventTitle: string;
   hostDisplayName: string;
   guestName: string;
+  guestEmail: string;
   guestTimezone: string;
   startTime: Date;
   endTime: Date;
@@ -306,6 +307,99 @@ export function buildRescheduledHostEmail(ctx: RescheduledHostContext) {
 
   const text = [
     "The booking was rescheduled",
+    "",
+    ctx.eventTitle,
+    dateStr,
+    `${startStr} – ${endStr}`,
+    `Times are shown in ${tzLabel}`,
+    "",
+    `Guest: ${ctx.guestName} (${ctx.guestEmail})`,
+  ].filter(Boolean).join("\n");
+
+  return { subject, html, text };
+}
+
+// --- REMINDERS ---
+export type ReminderGuestContext = {
+  eventTitle: string;
+  hostDisplayName: string;
+  guestName: string;
+  guestTimezone: string;
+  startTime: Date;
+  endTime: Date;
+  manageUrl: string;
+};
+
+export function buildReminderGuestEmail(ctx: ReminderGuestContext) {
+  const subject = `Reminder: ${stripNewlines(ctx.eventTitle)} with ${stripNewlines(ctx.hostDisplayName)}`;
+  const dateStr = formatDateInTz(ctx.startTime, ctx.guestTimezone);
+  const startStr = formatTimeInTz(ctx.startTime, ctx.guestTimezone);
+  const endStr = formatTimeInTz(ctx.endTime, ctx.guestTimezone);
+  const tzLabel = ctx.guestTimezone.replace(/_/g, " ");
+
+  const html = `
+    <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:24px;color:#171512;">
+      <h1 style="font-size:22px;margin:0 0 8px;">Your meeting is coming up</h1>
+      <p style="color:#5E5B54;margin:0 0 24px;">${escapeHtml(ctx.eventTitle)}</p>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #E6E1D6;padding:16px;">
+        <tr><td style="padding:12px 16px;font-weight:bold;">${dateStr}</td></tr>
+        <tr><td style="padding:0 16px 12px;">${startStr} – ${endStr}</td></tr>
+        <tr><td style="padding:0 16px 12px;color:#5E5B54;font-size:13px;">Times are shown in ${escapeHtml(tzLabel)}</td></tr>
+      </table>
+      <p style="margin:24px 0 4px;"><strong>Host:</strong> ${escapeHtml(ctx.hostDisplayName)}</p>
+      <p style="margin:4px 0;"><strong>Guest:</strong> ${escapeHtml(ctx.guestName)}</p>
+      <p style="margin:32px 0 4px;"><a href="${escapeHtml(ctx.manageUrl)}" style="color:#1E5B43;">View or manage your booking</a></p>
+    </div>
+  `.trim();
+
+  const text = [
+    "Your meeting is coming up",
+    "",
+    ctx.eventTitle,
+    dateStr,
+    `${startStr} – ${endStr}`,
+    `Times are shown in ${tzLabel}`,
+    "",
+    `Host: ${ctx.hostDisplayName}`,
+    `Guest: ${ctx.guestName}`,
+    "",
+    `View or manage your booking: ${ctx.manageUrl}`,
+  ].filter(Boolean).join("\n");
+
+  return { subject, html, text };
+}
+
+export type ReminderHostContext = {
+  eventTitle: string;
+  guestName: string;
+  guestEmail: string;
+  hostTimezone: string;
+  startTime: Date;
+  endTime: Date;
+};
+
+export function buildReminderHostEmail(ctx: ReminderHostContext) {
+  const subject = `Reminder: ${stripNewlines(ctx.eventTitle)} with ${stripNewlines(ctx.guestName)}`;
+  const dateStr = formatDateInTz(ctx.startTime, ctx.hostTimezone);
+  const startStr = formatTimeInTz(ctx.startTime, ctx.hostTimezone);
+  const endStr = formatTimeInTz(ctx.endTime, ctx.hostTimezone);
+  const tzLabel = ctx.hostTimezone.replace(/_/g, " ");
+
+  const html = `
+    <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:24px;color:#171512;">
+      <h1 style="font-size:22px;margin:0 0 8px;">You have a meeting coming up</h1>
+      <p style="color:#5E5B54;margin:0 0 24px;">${escapeHtml(ctx.eventTitle)}</p>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #E6E1D6;padding:16px;">
+        <tr><td style="padding:12px 16px;font-weight:bold;">${dateStr}</td></tr>
+        <tr><td style="padding:0 16px 12px;">${startStr} – ${endStr}</td></tr>
+        <tr><td style="padding:0 16px 12px;color:#5E5B54;font-size:13px;">Times are shown in ${escapeHtml(tzLabel)}</td></tr>
+      </table>
+      <p style="margin:24px 0 4px;"><strong>Guest:</strong> ${escapeHtml(ctx.guestName)} (${escapeHtml(ctx.guestEmail)})</p>
+    </div>
+  `.trim();
+
+  const text = [
+    "You have a meeting coming up",
     "",
     ctx.eventTitle,
     dateStr,

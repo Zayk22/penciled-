@@ -5,16 +5,16 @@ import { db } from "@/db";
 import { bookings, hosts } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { isValidTokenFormat, hashToken } from "@/lib/tokens";
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { after } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { buildCancelledGuestEmail, buildCancelledHostEmail } from "@/lib/email/templates";
 import { sendTrackedEmail } from "@/lib/email/events";
 
-export async function cancelBooking(formData: FormData) {
+export async function cancelBooking(formData: FormData): Promise<void> {
   const token = formData.get("token") as string;
   if (!isValidTokenFormat(token)) {
-    return { error: "Invalid token" };
+    notFound();
   }
 
   const hash = hashToken(token);
@@ -26,7 +26,9 @@ export async function cancelBooking(formData: FormData) {
     .limit(1);
 
   const data = result[0];
-  if (!data) return { error: "Booking not found" };
+  if (!data) {
+    notFound();
+  }
   const { booking, host } = data;
 
   if (booking.isCancelled) {
@@ -95,7 +97,7 @@ export async function cancelBooking(formData: FormData) {
         });
       }
     } catch {
-      // already handled
+      // handled
     }
   });
 

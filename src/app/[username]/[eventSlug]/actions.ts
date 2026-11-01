@@ -35,7 +35,6 @@ export async function createBooking(input: {
     return { ok: false, error: "Invalid input. Please check your details.", code: "validation_failed" };
   }
 
-  // 1. Turnstile verification first, before any DB work.
   const siteVerifyForm = new URLSearchParams();
   siteVerifyForm.append("secret", process.env.TURNSTILE_SECRET_KEY || "");
   siteVerifyForm.append("response", input.turnstileToken);
@@ -48,7 +47,6 @@ export async function createBooking(input: {
     return { ok: false, error: "Verification failed. Please try again.", code: "turnstile_failed" };
   }
 
-  // 2. Resolve host and event type.
   const hostResult = await db
     .select()
     .from(hosts)
@@ -65,7 +63,6 @@ export async function createBooking(input: {
   const eventType = eventTypeResult[0];
   if (!eventType) return { ok: false, error: "Event type not found.", code: "validation_failed" };
 
-  // 3. Re-generate slots at the server boundary.
   const rules = await db.select().from(availabilityRules).where(eq(availabilityRules.hostId, host.id));
   const todayStr = getTodayInTimezone(host.timezone);
   const overrides = await db
@@ -108,7 +105,6 @@ export async function createBooking(input: {
     return { ok: false, error: "That time is no longer available. Please pick another.", code: "slot_taken" };
   }
 
-  // 4. Compute range and derive the deterministic token from a fresh booking id.
   const requestedDate = new Date(input.requestedStartTime);
   const range = computeBlockedRange({
     start: requestedDate,
@@ -120,7 +116,6 @@ export async function createBooking(input: {
   const bookingId = randomUUID();
   const { token, hash } = generateDerivedToken(bookingId);
 
-  // 5. Insert. A 23P01 means someone else won the race.
   try {
     await db.insert(bookings).values({
       id: bookingId,
@@ -149,17 +144,12 @@ export async function createBooking(input: {
     return { ok: false, error: "Something went wrong. Please try again.", code: "generic" };
   }
 
-  // 6. Send confirmation emails after the response is sent.
-  //    Capture everything the callback needs BEFORE calling after(). Do not read cookies
-  //    or headers inside it. Individual failures update email_events; they never throw
-  //    into the user's request.
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   const manageUrl = `${appUrl}/booking/${token}`;
   const hostClerkId = host.clerkUserId;
 
   after(async () => {
     try {
-      // Guest confirmation
       const guestContent = buildGuestConfirmation({
         eventTitle: eventType.title,
         hostDisplayName: host.displayName,
@@ -181,17 +171,14 @@ export async function createBooking(input: {
         subject: guestContent.subject,
         html: guestContent.html,
         text: guestContent.text,
-        // No replyTo on guest emails. Host email must never appear here.
       });
 
-      // Host confirmation (skip if we can't resolve the host's email from Clerk)
       const client = await clerkClient();
       const user = await client.users.getUser(hostClerkId);
       const hostEmail = user.primaryEmailAddress?.emailAddress;
       if (hostEmail) {
         const hostContent = buildHostConfirmation({
           eventTitle: eventType.title,
-          hostDisplayName: host.displayName,
           hostTimezone: host.timezone,
           guestName: input.guestName,
           guestEmail: input.guestEmail,
@@ -213,11 +200,9 @@ export async function createBooking(input: {
         });
       }
     } catch {
-      // Individual failures are already recorded in email_events by sendTrackedEmail.
-      // Never throw into the user's request from after().
+      // handled by sendTrackedEmail
     }
   });
 
-  // 7. Redirect must be outside try/catch (redirect throws internally).
   redirect(`/booking/${token}`);
 }

@@ -1,3 +1,4 @@
+// src/components/ui/Nav.tsx
 "use client";
 
 import Link from "next/link";
@@ -6,6 +7,7 @@ import { Logo } from "@/components/Logo";
 
 const links = [
   { href: "/dashboard", label: "Overview" },
+  { href: "/dashboard/bookings", label: "Bookings" },
   { href: "/dashboard/availability", label: "Availability" },
   { href: "/dashboard/event-types", label: "Event types" },
   { href: "/dashboard/settings", label: "Settings" },

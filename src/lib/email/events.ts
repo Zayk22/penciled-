@@ -6,7 +6,7 @@ import { sendEmail, EmailRecipient } from "./index";
 
 const STALE_AFTER_MINUTES = 5;
 
-export type EmailKind = "confirmed" | "rescheduled" | "cancelled";
+export type EmailKind = "confirmed" | "rescheduled" | "cancelled" | "reminder";
 export type EmailRole = "guest" | "host";
 
 export async function tryClaimNew(
@@ -57,7 +57,6 @@ export async function tryRetryFailed(
   role: EmailRole,
   sequence: number
 ): Promise<{ id: string } | null> {
-  // created_at = now() prevents the stale-reclaim from matching immediately.
   const rows = await db
     .update(emailEvents)
     .set({ status: "pending", createdAt: new Date() })
@@ -100,24 +99,17 @@ export type SendTrackedEmailParams = {
   replyTo?: EmailRecipient;
 };
 
-/**
- * Claim → send → mark. Safe to call multiple times; only one invocation wins the claim.
- * Failures are recorded in email_events but never thrown — callers should invoke this
- * from within `after()` or another best-effort context.
- */
 export async function sendTrackedEmail(params: SendTrackedEmailParams): Promise<void> {
   const claimed = await tryClaimNew(params.bookingId, params.kind, params.role, params.sequence);
   let eventId: string | null = claimed ? claimed.id : null;
 
   if (!eventId) {
-    // The row exists. If it is stale-pending, reclaim and send. If it is sent, do nothing.
-    // If it is failed, do nothing here — a later cron retry will pick it up.
     const reclaimed = await tryReclaimStale(params.bookingId, params.kind, params.role, params.sequence);
     eventId = reclaimed ? reclaimed.id : null;
   }
 
   if (!eventId) {
-    return; // Already sent, actively being sent, or failed (retry comes from Phase 6 cron).
+    return;
   }
 
   const result = await sendEmail({
