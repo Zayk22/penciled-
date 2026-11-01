@@ -58,9 +58,17 @@ export default async function PublicProfilePage({
   return (
     <div className="min-h-screen bg-paper">
       <div className="max-w-2xl mx-auto px-4 py-12 md:py-24">
-        <header className="mb-8">
-          <h1 className="font-serif text-3xl md:text-4xl mb-2">{host.displayName}</h1>
-          <p className="text-muted">Pick a time to meet with {host.displayName}.</p>
+        <header className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="font-serif text-3xl md:text-4xl mb-2">{host.displayName}</h1>
+            <p className="text-muted">Pick a time to meet with {host.displayName}.</p>
+          </div>
+          <Link 
+            href="/" 
+            className="text-sm font-medium text-muted hover:text-ink transition-colors min-h-[44px] flex items-center"
+          >
+            Back to Penciled
+          </Link>
         </header>
 
         <div className="h-px bg-border mb-8" />
@@ -93,7 +101,7 @@ export default async function PublicProfilePage({
             Times are shown in your local time zone.
           </p>
           <Link href="/sign-in" className="flex justify-center md:justify-self-end items-center min-h-[44px] text-xs font-medium text-muted hover:text-ink transition-colors">
-            Sign in
+            Host sign in
           </Link>
         </footer>
       </div>

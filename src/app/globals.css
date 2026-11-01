@@ -88,3 +88,7 @@
     display: none;
   }
 }
+/* Hide Clerk development mode banner */
+.cl-internal-b3fm6y {
+  display: none !important;
+}
