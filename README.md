@@ -1,4 +1,3 @@
-
 # Penciled
 
 A booking scheduler for people who meet across time zones. Share one link, set your weekly hours, and guests pick a time on their own clock.
@@ -66,7 +65,7 @@ Even if two guests submit the exact same slot at the exact same millisecond, Pos
 
 - **Emails:** Emails go through Brevo from a free-mail sender address, so they may land in spam. Authenticating a domain I own fixes that and is a configuration change behind the email adapter.
 - **Brevo API Keys:** Brevo API keys expire after 90 days of inactivity and must be regenerated.
-- **Sign-ups:** Sign-ups for hosts are invite-only on the live demo, while the public booking pages need no account.
+- **Sign-ups:** Sign-ups are open so you can test the dashboard. The public booking pages need no account.
 - **Reminders:** Vercel Hobby allows one cron run per day, so reminders are not exactly 24 hours ahead.
 - **Clerk:** Clerk runs on a development instance because `vercel.app` cannot host a production instance.
 
@@ -85,4 +84,11 @@ Even if two guests submit the exact same slot at the exact same millisecond, Pos
 
 ## Screenshots
 
-*(Add screenshots of the landing page, booking page, dashboard, and confirmation email here)*
+### Landing Page
+![Penciled Landing Page](./screenshots/landing-page.png)
+
+### Public Booking Page
+![Penciled Booking Page](./screenshots/booking-page.png)
+
+### Host Dashboard
+![Penciled Dashboard](./screenshots/dashboard.png)
